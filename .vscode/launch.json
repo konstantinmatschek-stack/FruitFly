@@ -1,0 +1,40 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Fly Driver (Fenster)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/fly_driver.py",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Fly Driver (ohne Fenster, 300 Schritte, CSV-Log)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/fly_driver.py",
+      "args": ["--headless", "--ticks", "300", "--log", "run.csv"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Fly Driver (Reflex-Test ohne Gehirn)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/fly_driver.py",
+      "args": ["--brain", "reflex"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Zucker-Beispiel (Motorneuronen)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/examples/sugar_motor_neurons.py",
+      "args": ["--t-run", "1", "--trials", "4"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    }
+  ]
+}
