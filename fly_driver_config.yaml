@@ -1,0 +1,128 @@
+# fly_driver.py configuration
+#
+# Every neuron list accepts one of these forms:
+#   [720575940627652358, ...]                  FlyWire root IDs (v783)
+#   {P9_left: 720575940635872101, ...}         name -> ID (or name -> [IDs])
+#   {select: {cell_type: LC16, side: left}}   query on the FlyWire annotation
+#                                              table (needs brain.annotations)
+# Sides ("left"/"right") follow the FlyWire annotation table
+# (Schlegel et al. 2024); the Shiu et al. example notebook uses the mirrored
+# labels for P9/DNa01/DNa02.
+
+brain:
+  fly_brain_dir: ../fly-brain       # clone of eonsystemspbc/fly-brain (env FLY_BRAIN_DIR overrides)
+  completeness: data/2025_Completeness_783.csv
+  connectivity: data/2025_Connectivity_783.parquet
+  # only needed for {select: ...} neuron specs and tools/screen_sensory.py
+  annotations: ../flywire_annotations/supplemental_files/Supplemental_file1_neuron_annotations.tsv
+  device: auto          # auto (CUDA if available) | cuda | cpu
+  dt_ms: 0.1            # integration step of the LIF model
+  step_ms: 30           # brain time simulated per control step (20-50 ms)
+  seed: 0
+  model_params: {}      # overrides for fly_driver.MODEL_PARAMS, e.g. {wScale: 0.3}
+
+sensors:
+  range: 12             # m, maximum distance of the rays
+  encoding:             # proximity = 1 - d/range, p = clip((proximity - threshold) / (1 - threshold))
+    min_rate_hz: 0      # rate = min + (max - min) * p**gamma
+    max_rate_hz: 200
+    threshold: 0.4
+    gamma: 1.5
+  left:
+    angles_deg: [10, 30, 50]          # relative to heading, positive = left
+    # LC6 left (65 cells) = {select: {cell_type: LC6, side: left}}
+    neurons: [
+        720575940606477746, 720575940609789193, 720575940610485145, 720575940611518617,
+        720575940611580313, 720575940612142051, 720575940612227441, 720575940614230495,
+        720575940615058956, 720575940615123250, 720575940615369266, 720575940616613009,
+        720575940616715732, 720575940617216320, 720575940617989686, 720575940618650584,
+        720575940619219264, 720575940619419813, 720575940620699519, 720575940621953264,
+        720575940622382320, 720575940622462685, 720575940623272435, 720575940623306739,
+        720575940623703956, 720575940623737831, 720575940624461319, 720575940624802250,
+        720575940625048638, 720575940625396226, 720575940625579022, 720575940625623994,
+        720575940626669114, 720575940626720072, 720575940627003847, 720575940627006794,
+        720575940627141066, 720575940627343089, 720575940627740432, 720575940628026112,
+        720575940628484201, 720575940628684154, 720575940628708868, 720575940629013292,
+        720575940629204303, 720575940629289721, 720575940630016855, 720575940630466346,
+        720575940630509098, 720575940631115368, 720575940631745107, 720575940632095695,
+        720575940632592609, 720575940632679736, 720575940635020133, 720575940637042295,
+        720575940637066047, 720575940637604678, 720575940638210894, 720575940638231997,
+        720575940638458173, 720575940638900558, 720575940645288740, 720575940645925508,
+        720575940647182644
+    ]
+  right:
+    angles_deg: [-10, -30, -50]
+    # LC6 right (60 cells) = {select: {cell_type: LC6, side: right}}
+    neurons: [
+        720575940603391404, 720575940604324017, 720575940606672486, 720575940607458827,
+        720575940607473931, 720575940609930194, 720575940612971157, 720575940612988901,
+        720575940613067943, 720575940614602655, 720575940614636661, 720575940615457851,
+        720575940615979521, 720575940616031417, 720575940616258717, 720575940616276770,
+        720575940616970836, 720575940617024818, 720575940617983867, 720575940618242338,
+        720575940620199284, 720575940620775039, 720575940621260052, 720575940621434789,
+        720575940621596003, 720575940621733853, 720575940622061667, 720575940622313451,
+        720575940622392071, 720575940622489235, 720575940622581501, 720575940622626539,
+        720575940623683018, 720575940625129469, 720575940625752451, 720575940626355077,
+        720575940626416145, 720575940626935143, 720575940627047912, 720575940627332708,
+        720575940627675497, 720575940628013562, 720575940628685762, 720575940629078011,
+        720575940629304783, 720575940629329212, 720575940629647695, 720575940629894760,
+        720575940630119224, 720575940630908876, 720575940631116461, 720575940632401804,
+        720575940632851993, 720575940633908148, 720575940633938168, 720575940637113277,
+        720575940638206653, 720575940639199977, 720575940639646022, 720575940644940232
+    ]
+
+# constant Poisson drive, e.g. a "walk forward" command to P9
+tonic_inputs:
+  - name: walk command (P9, as in the fly-brain 'p9' experiment)
+    rate_hz: 100
+    neurons:
+      P9_left: 720575940635872101
+      P9_right: 720575940627652358
+
+motor:
+  smoothing_ms: 60      # low-pass time constant of the decoded rates
+  base_throttle: 0.0    # added to the P9 throttle level
+  steer_gain: 1.0
+  commands:             # which groups feed which command
+    throttle: throttle
+    steer_left: steer_left
+    steer_right: steer_right
+    brake: brake
+  groups:               # level = clip((mean_rate - offset_hz) / full_scale_hz, 0, 1)
+    throttle:
+      full_scale_hz: 60
+      neurons:
+        P9_left: 720575940635872101
+        P9_right: 720575940627652358
+    steer_left:
+      full_scale_hz: 40
+      neurons:
+        DNa01_left: 720575940627787609
+        DNa02_left: 720575940629327659
+    steer_right:
+      full_scale_hz: 40
+      neurons:
+        DNa01_right: 720575940644438551
+        DNa02_right: 720575940604737708
+    brake:
+      offset_hz: 5
+      full_scale_hz: 40
+      neurons:
+        MDN_left_1: 720575940631082808
+        MDN_left_2: 720575940616026939
+        MDN_right_1: 720575940610236514
+        MDN_right_2: 720575940640331472
+
+car:
+  max_speed: 8          # m/s
+  accel: 6              # m/s^2 at full throttle
+  brake_decel: 8        # m/s^2 at full brake
+  drag: 0.4             # 1/s
+  max_turn_rate_deg: 120
+  radius: 0.9           # m
+
+world:
+  road_width: 12
+  obstacle_spacing: [14, 24]
+  obstacle_size: [1.5, 3.5]
+  free_start: 20

@@ -1,0 +1,17 @@
+# Minimal environment for fly_driver.py.
+# Alternatively use the brain-fly env of eonsystemspbc/fly-brain and add
+#   pip install pygame pyyaml pytest
+name: fly-driver
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - numpy=1.26.4
+  - pandas
+  - pyarrow
+  - pyyaml
+  - pytest
+  - pip:
+    - torch        # CUDA wheel from PyPI, falls back to CPU without GPU
+    - pygame
